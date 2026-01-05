@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-  
-=======
 # Airfare Price Prediction Using Machine Learning
 
 **Academic Mini Project (Semester 3.2)**  
