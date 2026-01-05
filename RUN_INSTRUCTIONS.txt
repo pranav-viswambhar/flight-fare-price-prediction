@@ -1,0 +1,23 @@
+how to run steps
+
+open anaconda prompt from search
+
+conda activate tf
+
+cd C:\Users\abhin\Desktop\Flight price
+
+python app.py
+
+ctrl+ click on link 127.0.0.1
+
+
+how to run algorithm
+
+
+conda activate tf
+
+cd C:\Users\abhin\Desktop\Flight price
+
+
+jupyter notebook flight_price.ipynb 
+

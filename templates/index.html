@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Price Prediction Using Machine Learning</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+          integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-card {
+            margin-top: 100px;
+        }
+
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        #animationArea {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #plane {
+            font-size: 40px;
+            position: absolute;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            padding: 10px;
+            color: #888;
+        }
+        
+        .custom-alert {
+            display: none;
+            padding: 10px;
+            background-color: #f8d7da;
+            color: #721c24;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+ <!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid d-flex justify-content-between align-items-center">
+      <a class="navbar-brand font-weight-bold">AirFare Prediction</a>
+         <span class="text-light small font-italic d-none d-md-block">
+      Plan Smart, Fly Smarter — Get Real-Time Fare Insights!
+    </span>
+    </div>
+  </nav>
+
+<!-- Main Form -->
+<div class="container form-card">
+    <!-- Custom Alert -->
+    <div id="customAlert" class="custom-alert">
+        <span id="alertMessage"></span>
+    </div>
+    
+    <form id="flightForm" action="/predict" method="post">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Departure Date & Time</h5>
+                   <input type="datetime-local" id="departure" name="Dep_Time" class="form-control" required>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Arrival Date & Time</h5>
+                    <input type="datetime-local" id="arrival" name="Arrival_Time" class="form-control" required>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Source</h5>
+                    <select id="source" name="Source" class="form-control" required>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Cochin">Cochin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Destination</h5>
+                    <select id="destination" name="Destination" class="form-control" required>
+                        <option value="Cochin">Cochin</option>
+                        <option value="Delhi">Delhi</option>
+                        <option value="Mumbai">Mumbai</option>
+                        <option value="Chennai">Chennai</option>
+                        <option value="Hyderabad">Hyderabad</option>
+                        <option value="Kolkata">Kolkata</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Stoppage</h5>
+                    <select name="stops" class="form-control" required>
+                        <option value="0">Non-Stop</option>
+                        <option value="1">1 Stop</option>
+                        <option value="2">2 Stops</option>
+                        <option value="3">3 Stops</option>
+                        <option value="4">4 Stops</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h5>Preferred Airline</h5>
+                    <select name="airline" class="form-control" required>
+                        <option value="Jet Airways">Jet Airways</option>
+                        <option value="IndiGo">IndiGo</option>
+                        <option value="Air India">Air India</option>
+                        <option value="Multiple carriers">Multiple carriers</option>
+                        <option value="SpiceJet">SpiceJet</option>
+                        <option value="Vistara">Vistara</option>
+                        <option value="Air Asia">Air Asia</option>
+                        <option value="GoAir">GoAir</option>
+                        <option value="Trujet">Trujet</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="text-center mt-4">
+            <input type="submit" value="Predict Fare" class="btn btn-dark btn-lg">
+        </div>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Calculating best fare for you...</p>
+        </div>
+
+        <!-- Prediction Result -->
+        <h3 class="text-center mt-4 text-info">{{ prediction_text }}</h3>
+    </form>
+
+    <footer>
+        &copy; 2025 Team-C13. All Rights Reserved.
+    </footer>
+</div>
+
+<!-- JavaScript -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Select elements
+        const depInput = document.getElementById("departure");
+        const arrInput = document.getElementById("arrival");
+        const sourceSelect = document.getElementById("source");
+        const destinationSelect = document.getElementById("destination");
+        const form = document.getElementById("flightForm");
+        const customAlert = document.getElementById("customAlert");
+        const alertMessage = document.getElementById("alertMessage");
+        
+        // Initially disable arrival input until departure is selected
+        arrInput.disabled = true;
+
+        // Function to show custom alert
+        function showAlert(message) {
+            alertMessage.textContent = message;
+            customAlert.style.display = "block";
+            setTimeout(() => {
+                customAlert.style.display = "none";
+            }, 3000);
+        }
+
+        // Function to get current datetime in "YYYY-MM-DDTHH:MM" format
+        function getCurrentDateTimeLocal() {
+            const now = new Date();
+            now.setSeconds(0, 0); // Remove seconds & ms for compatibility
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+
+        // Set initial min for departure (current datetime)
+        depInput.min = getCurrentDateTimeLocal();
+        
+        // Check and update source and destination selections
+        function checkSourceDestination() {
+            if (sourceSelect.value === destinationSelect.value) {
+                showAlert("Source and destination cannot be the same location.");
+                return false;
+            }
+            return true;
+        }
+
+        // Update arrival min/max times based on departure selection
+        function updateArrivalLimits() {
+            if (!depInput.value) return;
+            
+            const depTime = new Date(depInput.value);
+            
+            // Set arrival min to departure time + 1.5 hours 
+            const minArrivalTime = new Date(depTime);
+            minArrivalTime.setMinutes(minArrivalTime.getMinutes() + 90); // 1.5 hours
+            
+            // Convert to ISO format for datetime-local input
+            const year = minArrivalTime.getFullYear();
+            const month = String(minArrivalTime.getMonth() + 1).padStart(2, '0');
+            const day = String(minArrivalTime.getDate()).padStart(2, '0');
+            const hours = String(minArrivalTime.getHours()).padStart(2, '0');
+            const minutes = String(minArrivalTime.getMinutes()).padStart(2, '0');
+            
+            arrInput.min = `${year}-${month}-${day}T${hours}:${minutes}`;
+            
+            // Set arrival max to departure time + 2 days (exactly 48 hours)
+            const maxArrivalTime = new Date(depTime);
+            maxArrivalTime.setDate(maxArrivalTime.getDate() + 2);
+            
+            // Convert to ISO format
+            const maxYear = maxArrivalTime.getFullYear();
+            const maxMonth = String(maxArrivalTime.getMonth() + 1).padStart(2, '0');
+            const maxDay = String(maxArrivalTime.getDate()).padStart(2, '0');
+            const maxHours = String(maxArrivalTime.getHours()).padStart(2, '0');
+            const maxMinutes = String(maxArrivalTime.getMinutes()).padStart(2, '0');
+            
+            arrInput.max = `${maxYear}-${maxMonth}-${maxDay}T${maxHours}:${maxMinutes}`;
+            
+            // Enable the arrival input now that we have valid constraints
+            arrInput.disabled = false;
+            
+            // Clear arrival value if it's outside new limits
+            const arrivalDate = arrInput.value ? new Date(arrInput.value) : null;
+            if (arrivalDate && (arrivalDate < minArrivalTime || arrivalDate > maxArrivalTime)) {
+                arrInput.value = "";
+            }
+        }
+
+        // Event listeners
+        depInput.addEventListener("change", function() {
+            if (!depInput.value) return;
+            
+            const depTime = new Date(depInput.value);
+            const currentTime = new Date();
+            
+            // Check if selected time is in the past
+            if (depTime < currentTime) {
+                showAlert("Departure time must be in the future.");
+                depInput.value = "";
+                return;
+            }
+            
+            updateArrivalLimits();
+        });
+        
+        arrInput.addEventListener("change", function() {
+            if (!arrInput.value || !depInput.value) return;
+            
+            const depTime = new Date(depInput.value);
+            const arrTime = new Date(arrInput.value);
+            
+            // Check if arrival is before departure
+            if (arrTime <= depTime) {
+                showAlert("Arrival must be after departure.");
+                arrInput.value = "";
+                return;
+            }
+            
+            // Check if arrival is more than 2 days after departure
+            const maxArrivalTime = new Date(depTime);
+            maxArrivalTime.setDate(maxArrivalTime.getDate() + 2);
+            
+            if (arrTime > maxArrivalTime) {
+                showAlert("Arrival must be within 2 days of departure date.");
+                arrInput.value = "";
+                return;
+            }
+            
+            // Check if same day and less than 1.5 hours difference
+            const isSameDay = depTime.getDate() === arrTime.getDate() && 
+                            depTime.getMonth() === arrTime.getMonth() && 
+                            depTime.getFullYear() === arrTime.getFullYear();
+            
+            const timeDiffMs = arrTime - depTime;
+            const minDiffMs = 90 * 60 * 1000; // 1.5 hours in milliseconds
+            
+            if (isSameDay && timeDiffMs < minDiffMs) {
+                showAlert("On the same date, arrival must be at least 1.5 hours after departure.");
+                arrInput.value = "";
+                return;
+            }
+        });
+        
+        // Check source and destination when they change
+        sourceSelect.addEventListener("change", checkSourceDestination);
+        destinationSelect.addEventListener("change", checkSourceDestination);
+        
+        // Form submission validation
+        form.addEventListener("submit", function(e) {
+            // Prevent form submission initially
+            e.preventDefault();
+            
+            // Check if all inputs are valid
+            if (!depInput.value) {
+                showAlert("Please select a departure time.");
+                return;
+            }
+            
+            if (!arrInput.value) {
+                showAlert("Please select an arrival time.");
+                return;
+            }
+            
+            // Check source and destination
+            if (sourceSelect.value === destinationSelect.value) {
+                showAlert("Source and destination cannot be the same location.");
+                return;
+            }
+            
+            const depTime = new Date(depInput.value);
+            const arrTime = new Date(arrInput.value);
+            const currentTime = new Date();
+            
+            // Validate that departure is in the future
+            if (depTime < currentTime) {
+                showAlert("Departure time must be in the future.");
+                return;
+            }
+            
+            // Check if arrival is after departure
+            if (arrTime <= depTime) {
+                showAlert("Arrival must be after departure.");
+                return;
+            }
+            
+            // Check if arrival is within 2 days of departure
+            const maxArrivalTime = new Date(depTime);
+            maxArrivalTime.setDate(maxArrivalTime.getDate() + 2);
+            
+            if (arrTime > maxArrivalTime) {
+                showAlert("Arrival must be within 2 days of departure date.");
+                return;
+            }
+            
+            // Check if same day and less than 1.5 hours difference
+            const isSameDay = depTime.getDate() === arrTime.getDate() && 
+                            depTime.getMonth() === arrTime.getMonth() && 
+                            depTime.getFullYear() === arrTime.getFullYear();
+            
+            const timeDiffMs = arrTime - depTime;
+            const minDiffMs = 90 * 60 * 1000; // 1.5 hours in milliseconds
+            
+            if (isSameDay && timeDiffMs < minDiffMs) {
+                showAlert("On the same date, arrival must be at least 1.5 hours after departure.");
+                return;
+            }
+            
+            // If all validations pass, show loading spinner
+            document.getElementById("loadingSpinner").style.display = "block";
+            
+            // Submit the form
+            this.submit();
+        });
+        
+        // Check source and destination on page load
+        checkSourceDestination();
+        
+        // Initialize arrival limits based on current time
+        updateArrivalLimits();
+    });
+</script>
+</body>
+</html>
