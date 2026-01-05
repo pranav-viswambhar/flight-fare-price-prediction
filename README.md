@@ -152,4 +152,4 @@ The repository is maintained for **academic documentation, technical demonstrati
 The Airfare Price Prediction system demonstrates how machine learning can be applied to estimate flight prices using historical trends.  
 By enabling **future-year predictions**, the project supports long-term travel planning and analytical exploration of airfare behavior.  
 With enhanced datasets and real-time integration, the system can be extended to deliver more accurate and scalable predictions.
->>>>>>> 189e39f32e8ddfe7e5409eb4060215c4087053b4
+
