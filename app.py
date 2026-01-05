@@ -40,6 +40,7 @@ def r():
 def menu():
     return render_template('menu.html')
 
+# Academic mini project: Airfare Price Prediction (Feb 2025 – Jun 2025)
 
 
 @app.route("/register",methods=['POST','GET'])

@@ -1,3 +1,5 @@
+
+# Academic mini project: Airfare Price Prediction (Feb 2025 – Jun 2025)
 import sqlite3
 import hashlib
 import datetime
